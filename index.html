@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B.Tech CSE Study Timetable</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 B.Tech CSE Study Timetable</h1>
+            <p>Organized Schedule for Computer Science Engineering</p>
+        </header>
+
+        <div class="controls">
+            <button id="weekToggle" class="btn">Monday to Friday</button>
+            <button id="resetBtn" class="btn btn-secondary">Reset Schedule</button>
+        </div>
+
+        <div class="timetable-section">
+            <h2>Weekly Study Schedule</h2>
+            <table id="timetable" class="timetable">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="tasks-section">
+            <h2>📋 Today's Tasks</h2>
+            <div class="task-input">
+                <input type="text" id="taskInput" placeholder="Add a new task...">
+                <button id="addTaskBtn" class="btn btn-primary">Add Task</button>
+            </div>
+            <ul id="taskList" class="task-list">
+                <!-- Tasks will be added here -->
+            </ul>
+        </div>
+
+        <div class="timer-section">
+            <h2>⏱️ Study Timer (Pomodoro)</h2>
+            <div class="timer-display">
+                <span id="timerMinutes">25</span>:<span id="timerSeconds">00</span>
+            </div>
+            <div class="timer-buttons">
+                <button id="startBtn" class="btn btn-primary">Start</button>
+                <button id="pauseBtn" class="btn btn-secondary">Pause</button>
+                <button id="resetTimerBtn" class="btn btn-secondary">Reset</button>
+            </div>
+            <div class="timer-options">
+                <label>Study Duration (minutes): <input type="number" id="studyDuration" value="25" min="1" max="60"></label>
+                <label>Break Duration (minutes): <input type="number" id="breakDuration" value="5" min="1" max="30"></label>
+            </div>
+        </div>
+
+        <div class="notes-section">
+            <h2>📝 Quick Notes</h2>
+            <textarea id="notesArea" placeholder="Write your study notes here..."></textarea>
+            <button id="saveNotesBtn" class="btn btn-primary">Save Notes</button>
+            <div id="notesSaved" class="message"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
