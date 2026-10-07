@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sem 1 Notes | GH Raisoni Jalgaon</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{font-family:system-ui,sans-serif;background:#eef3fb;color:#14213d;max-width:480px;margin:0 auto;min-height:100vh}
+header{background:#1a56db;color:#fff;padding:16px}
+header h1{font-size:18px;font-weight:600}
+header p{font-size:13px;opacity:.9;margin-top:2px}
+#back{background:none;border:none;color:#fff;font-size:14px;padding:0 0 8px;cursor:pointer;display:none}
+main{padding:16px}
+.lbl{font-size:14px;color:#51607a;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.list{display:flex;flex-direction:column;gap:10px}
+.item{display:block;width:100%;text-align:left;background:#fff;border:1px solid #c9d8f5;color:#1a3a8f;border-radius:10px;padding:14px;font-size:15px;font-weight:500;cursor:pointer;text-decoration:none}
+.item small{display:block;font-weight:400;color:#51607a;font-size:12px;margin-top:2px}
+.item:active{background:#dde8fb}
+.empty{background:#fff;border:1px dashed #c9d8f5;border-radius:10px;padding:18px;text-align:center;color:#51607a;font-size:14px}
+footer{padding:12px 16px 24px;text-align:center;font-size:12px;color:#7a869c}
+</style>
+</head>
+<body>
+<header>
+  <button id="back">&larr; Back</button>
+  <h1 id="title"></h1>
+  <p id="sub"></p>
+</header>
+<main id="main"></main>
+<footer>Sem 1 notes &middot; GH Raisoni Jalgaon</footer>
+
+<script>
+/* ===== DATA: edit only this part ===== */
+const SUBJECTS = [
+  { code: "PPS",  name: "Programming for Problem Solving" },
+  { code: "EP",   name: "Engineering Physics" },
+  { code: "ICDE", name: "Integral Calculus and Differential Equations" },
+  { code: "CFT",  name: "Computer Fundamentals and Troubleshooting" },
+  { code: "FDA",  name: "Fundamental of Data Analysis" },
+  { code: "LAS",  name: "Linear Algebra and Statistics" },
+  { code: "IKS",  name: "Indian Knowledge Systems" }
+];
+
+/* Branch -> clusters. One cluster = cluster screen is skipped. */
+const BRANCHES = {
+  ETC:  [{ name: "ETC",  cluster: "A" }],
+  EE:   [{ name: "EE",   cluster: "B" }],
+  ME:   [{ name: "ME",   cluster: "C" }],
+  CE:   [{ name: "CE",   cluster: "D" }],
+  AIML: [{ name: "AIML", cluster: "E" }],
+  DS:   [{ name: "DS",   cluster: "F" }],
+  IT:   [{ name: "IT",   cluster: "G" }],
+  CSE:  [
+    { name: "CSE-I",   cluster: "H" },
+    { name: "CSE-II",  cluster: "I" },
+    { name: "CSE-III", cluster: "J" },
+    { name: "CSE-IV",  cluster: "K" },
+    { name: "CSE-V",   cluster: "L" }
+  ],
+  AI:   [{ name: "AI", cluster: "M" }, { name: "AI", cluster: "N" }]
+};
+
+/* Units per subject. Replace with real syllabus unit names. */
+const UNITS = {
+  PPS: ["Unit 1", "Unit 2", "Unit 3", "Unit 4", "Unit 5"],
+  EP: ["Unit 1", "Unit 2", "Unit 3", "Unit 4", "Unit 5"],
+  ICDE: ["Unit 1", "Unit 2", "Unit 3", "Unit 4", "Unit 5"],
+  CFT: ["Unit 1", "Unit 2", "Unit 3", "Unit 4", "Unit 5"],
+  FDA: ["Unit 1", "Unit 2", "Unit 3", "Unit 4", "Unit 5"],
+  LAS: ["Unit 1", "Unit 2", "Unit 3", "Unit 4", "Unit 5"],
+  IKS: ["Unit 1", "Unit 2", "Unit 3", "Unit 4", "Unit 5"]
+};
+
+/* Google Sheet (File > Share > Publish to web > Sheet 1 > CSV). Paste that link here.
+   Sheet columns, row 1 = header: Subject | Unit | Title | Link
+   Example row: PPS | 1 | Unit 1 notes (PDF) | https://drive.google.com/... */
+const SHEET_CSV_URL = "";
+
+/* Optional manual notes (used even without a sheet). Key = SUBJECT|unit index (0 = Unit 1) */
+const NOTES = {
+  // "PPS|0": [{ title: "Unit 1 notes (PDF)", url: "https://drive.google.com/..." }],
+};
+/* ===== END DATA ===== */
+
+let notesReady = !SHEET_CSV_URL;
+
+function parseCSV(text) {
+  const rows = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+      else if (c === '"') q = false;
+      else cell += c;
+    } else if (c === '"') q = true;
+    else if (c === ",") { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(cell); cell = ""; rows.push(row); row = [];
+    } else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+
+function loadNotes() {
+  if (!SHEET_CSV_URL) return;
+  fetch(SHEET_CSV_URL)
+    .then(r => r.text())
+    .then(t => {
+      parseCSV(t).slice(1).forEach(r => {
+        const subj = (r[0] || "").trim().toUpperCase();
+        const unit = parseInt(r[1], 10) - 1;
+        const title = (r[2] || "").trim();
+        const url = (r[3] || "").trim();
+        if (!subj || isNaN(unit) || unit < 0 || !title || !/^https?:\/\//i.test(url)) return;
+        (NOTES[subj + "|" + unit] = NOTES[subj + "|" + unit] || []).push({ title, url });
+      });
+    })
+    .catch(() => {})
+    .finally(() => { notesReady = true; });
+}
+loadNotes();
+
+const $ = id => document.getElementById(id);
+let st = { branch: null, opt: null, subj: null, unit: null };
+
+function view(title, sub, html, canBack) {
+  $("title").textContent = title;
+  $("sub").textContent = sub;
+  $("main").innerHTML = html;
+  $("back").style.display = canBack ? "block" : "none";
+  window.scrollTo(0, 0);
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+function showBranches() {
+  st = { branch: null, opt: null, subj: null, unit: null };
+  const btns = Object.keys(BRANCHES).map(b => `<button class="item" data-b="${esc(b)}">${esc(b)}</button>`).join("");
+  view("1st semester notes", "GH Raisoni Jalgaon", `<p class="lbl">Select your branch</p><div class="grid">${btns}</div>`, false);
+  $("main").querySelectorAll("[data-b]").forEach(el => el.onclick = () => pickBranch(el.dataset.b));
+}
+function pickBranch(b) {
+  st.branch = b;
+  const opts = BRANCHES[b];
+  if (opts.length === 1) { st.opt = opts[0]; showSubjects(); } else { showClusters(); }
+}
+function showClusters() {
+  const btns = BRANCHES[st.branch].map((o, i) => `<button class="item" data-i="${i}">${esc(o.name)}<small>Cluster ${esc(o.cluster)}</small></button>`).join("");
+  view(st.branch, "Choose your cluster", `<p class="lbl">Select your cluster</p><div class="list">${btns}</div>`, true);
+  $("main").querySelectorAll("[data-i]").forEach(el => el.onclick = () => { st.opt = BRANCHES[st.branch][+el.dataset.i]; showSubjects(); });
+}
+function showSubjects() {
+  st.subj = null; st.unit = null;
+  const btns = SUBJECTS.map((s, i) => `<button class="item" data-i="${i}">${esc(s.code)}<small>${esc(s.name)}</small></button>`).join("");
+  view(`${st.opt.name} · cluster ${st.opt.cluster}`, "Choose a subject", `<div class="list">${btns}</div>`, true);
+  $("main").querySelectorAll("[data-i]").forEach(el => el.onclick = () => { st.subj = SUBJECTS[+el.dataset.i]; showUnits(); });
+}
+function showUnits() {
+  st.unit = null;
+  const btns = (UNITS[st.subj.code] || []).map((u, i) => `<button class="item" data-i="${i}">${esc(u)}</button>`).join("");
+  view(st.subj.code, st.subj.name, `<p class="lbl">Select a unit</p><div class="list">${btns}</div>`, true);
+  $("main").querySelectorAll("[data-i]").forEach(el => el.onclick = () => { st.unit = +el.dataset.i; showNotes(); });
+}
+function showNotes() {
+  const files = NOTES[`${st.subj.code}|${st.unit}`] || [];
+  const body = files.length
+    ? files.map(f => `<a class="item" href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}<small>Opens in Google Drive</small></a>`).join("")
+    : `<div class="empty">${notesReady ? "Notes for this unit are coming soon." : "Loading notes…"}</div>`;
+  view(`${st.subj.code} · ${UNITS[st.subj.code][st.unit]}`, "Notes", `<div class="list">${body}</div>`, true);
+  if (!notesReady && !files.length) setTimeout(() => { if (st.unit !== null) showNotes(); }, 800);
+}
+
+$("back").onclick = () => {
+  if (st.unit !== null) return showUnits();
+  if (st.subj) return showSubjects();
+  if (BRANCHES[st.branch] && BRANCHES[st.branch].length > 1 && st.opt) { st.opt = null; return showClusters(); }
+  showBranches();
+};
+showBranches();
+</script>
+</body>
+</html>
